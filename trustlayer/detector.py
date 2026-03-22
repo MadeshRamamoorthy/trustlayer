@@ -22,7 +22,8 @@ from trustlayer.industries import get_industry
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-MODEL = "claude-sonnet-4-5"          # fast + accurate; swap to opus-4-5 for max accuracy
+GENERATION_MODEL = "claude-sonnet-4-5"   # high quality for user-facing response
+DETECTION_MODEL  = "claude-haiku-4-5-20251001"    # fast + cheap for structured JSON judging (~1s vs ~4s)
 
 DETECTION_PROMPT = """\
 You are TrustLayer AI's detection engine — an expert hallucination analyst.
@@ -102,12 +103,24 @@ class TrustLayerDetector:
         industry_cfg = get_industry(request.industry)
 
         msg = self.client.messages.create(
-            model=MODEL,
-            max_tokens=200,
+            model=GENERATION_MODEL,
+            max_tokens=600,
             system=industry_cfg["system_prompt"],
             messages=[{"role": "user", "content": request.query}],
         )
         return msg.content[0].text
+
+    def generate_response_stream(self, request: AnalysisRequest):
+        """Stream Claude response token-by-token. Yields text chunks."""
+        industry_cfg = get_industry(request.industry)
+        with self.client.messages.stream(
+            model=GENERATION_MODEL,
+            max_tokens=600,
+            system=industry_cfg["system_prompt"],
+            messages=[{"role": "user", "content": request.query}],
+        ) as stream:
+            for text in stream.text_stream:
+                yield text
 
     # ── Step 2: Comprehensive hallucination analysis ───────────────────────────
 
@@ -146,8 +159,8 @@ class TrustLayerDetector:
         )
 
         raw = self.client.messages.create(
-            model=MODEL,
-            max_tokens=500,
+            model=DETECTION_MODEL,
+            max_tokens=1500,
             messages=[{"role": "user", "content": detection_prompt}],
         )
         raw_text = raw.content[0].text
@@ -163,8 +176,8 @@ class TrustLayerDetector:
         except json.JSONDecodeError:
             # Silent retry: ask Claude to return clean JSON only
             retry = self.client.messages.create(
-                model=MODEL,
-                max_tokens=500,
+                model=DETECTION_MODEL,
+                max_tokens=1500,
                 messages=[
                     {"role": "user",      "content": detection_prompt},
                     {"role": "assistant", "content": raw_text},
@@ -253,7 +266,7 @@ class TrustLayerDetector:
 
         def _generate_variant():
             msg = self.client.messages.create(
-                model=MODEL,
+                model=GENERATION_MODEL,
                 max_tokens=400,
                 system=industry_cfg["system_prompt"],
                 messages=[{"role": "user", "content": request.query}],
@@ -283,7 +296,7 @@ class TrustLayerDetector:
         )
         try:
             result = self.client.messages.create(
-                model=MODEL,
+                model=DETECTION_MODEL,
                 max_tokens=10,
                 messages=[{"role": "user", "content": agreement_prompt}],
             )

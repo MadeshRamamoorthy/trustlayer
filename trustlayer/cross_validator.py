@@ -22,9 +22,9 @@ from trustlayer.models import (
     TechniqueScores,
 )
 from trustlayer.industries import get_industry
-from trustlayer.detector import DETECTION_PROMPT, MODEL as CLAUDE_MODEL
+from trustlayer.detector import DETECTION_PROMPT
 
-OPENAI_MODEL = "gpt-4o"
+OPENAI_MODEL = "gpt-4o-mini"   # fast + cheap for structured JSON judging
 
 
 # ── Cross-validation result ───────────────────────────────────────────────────

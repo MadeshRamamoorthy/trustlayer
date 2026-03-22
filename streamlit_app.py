@@ -714,80 +714,102 @@ with tab_detect:
         # Choose pipeline: cross-validation or single Claude
         run_cv = use_cross_validation and bool(openai_key)
 
-        # Progress steps
-        progress_placeholder = st.empty()
-        if run_cv:
-            steps = [
-                ("Claude: generating response...", "⏳"),
-                ("Claude: detection analysis...",  "⏳"),
-                ("GPT-4o: cross-validation...",    "⏳"),
-                ("Computing consensus decision...", "⏳"),
-            ]
-        else:
-            steps = [
-                ("Sending query to Claude...",           "⏳"),
-                ("Extracting claims and citations...",   "⏳"),
-                ("Running 8 detection algorithms...",    "⏳"),
-                ("Computing confidence + risk scores...", "⏳"),
-            ]
+        try:
+            # ── Phase 1: Stream response to user instantly (~2-3s) ─────
+            detector = get_detector(api_key)
+            st.markdown("##### 💬 AI Response")
+            response_box = st.empty()
+            streamed_chunks = []
 
-        with progress_placeholder.container():
-            step_cols = st.columns(len(steps))
-            for i, (label, icon) in enumerate(steps):
-                step_cols[i].markdown(
-                    f"<div class='step-pending'>{icon} {label}</div>",
-                    unsafe_allow_html=True,
+            with response_box.container():
+                stream_area = st.empty()
+                for chunk in detector.generate_response_stream(request):
+                    streamed_chunks.append(chunk)
+                    stream_area.markdown("".join(streamed_chunks))
+
+            llm_response = "".join(streamed_chunks)
+
+            # ── Phase 2: Background analysis while user reads (~1-2s) ──
+            analysis_status = st.empty()
+            analysis_status.info("🔄 TrustLayer analyzing response for accuracy...")
+
+            if run_cv:
+                # Cross-validation: Claude (Haiku) + GPT-4o-mini judge in parallel
+                cv_engine = get_cross_validator(api_key, openai_key)
+                # Both judges analyze the already-streamed response in parallel
+                from concurrent.futures import ThreadPoolExecutor
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    claude_future = executor.submit(detector.analyze, request, llm_response)
+                    gpt_future    = executor.submit(cv_engine.gpt.analyze, request, llm_response)
+                    claude_result = claude_future.result()
+                    openai_result = gpt_future.result()
+
+                # Compute agreement + consensus
+                agreement, signals = cv_engine._score_agreement(claude_result, openai_result)
+                consensus_action = cv_engine._consensus_action(claude_result, openai_result, agreement)
+                blend_weight = 0.5 + (agreement - 0.5) * 0.2
+                consensus_confidence = round(
+                    claude_result.confidence_score * blend_weight +
+                    openai_result.confidence_score * (1 - blend_weight), 1,
+                )
+                consensus_risk = round(
+                    (claude_result.risk_score + openai_result.risk_score) / 2, 1,
+                )
+                if agreement < 0.5:
+                    consensus_confidence = min(consensus_confidence, 55.0)
+
+                cv_result = CrossValidationResult(
+                    claude_result=claude_result,
+                    openai_result=openai_result,
+                    agreement_score=agreement,
+                    consensus_action=consensus_action,
+                    consensus_confidence=consensus_confidence,
+                    consensus_risk=consensus_risk,
+                    disagreement_signals=signals,
+                    processing_ms=int(
+                        (claude_result.processing_ms or 0) + (openai_result.processing_ms or 0)
+                    ),
                 )
 
-        def update_step(i: int, done: bool = False):
-            icon = "✅" if done else "🔄"
-            cls  = "step-done" if done else "step-active"
-            step_cols[i].markdown(
-                f"<div class='{cls}'>{icon} {steps[i][0]}</div>",
-                unsafe_allow_html=True,
-            )
-
-        try:
-            if run_cv:
-                # Cross-validation pipeline
-                cv = get_cross_validator(api_key, openai_key)
-                update_step(0)
-                # run() handles generate + both analyses internally
-                # We update steps incrementally via timing approximation
-                update_step(1)
-                update_step(2)
-                cv_result = cv.run(request)
-                update_step(0, done=True)
-                update_step(1, done=True)
-                update_step(2, done=True)
-                update_step(3, done=True)
-
-                result = cv_result.claude_result  # primary result for display
+                result = claude_result
                 st.session_state.last_cv_result = cv_result
                 st.session_state.last_result = result
-
-                # Use consensus for history
                 history_action = cv_result.consensus_action
                 history_conf   = cv_result.consensus_confidence
                 history_risk   = cv_result.consensus_risk
             else:
-                # Single Claude pipeline
-                detector = get_detector(api_key)
-                update_step(0)
-                llm_response = detector.generate_response(request)
-                update_step(0, done=True)
-                update_step(1)
-                update_step(2)
+                # Single Claude (Haiku) analysis
                 result = detector.analyze(request, llm_response)
-                update_step(1, done=True)
-                update_step(2, done=True)
-                update_step(3, done=True)
-
                 st.session_state.last_result = result
                 st.session_state.last_cv_result = None
                 history_action = result.action
                 history_conf   = result.confidence_score
                 history_risk   = result.risk_score
+
+            analysis_status.empty()
+
+            # ── Phase 3: Show verdict overlay on the streamed response ──
+            if history_action == "BLOCK":
+                response_box.empty()
+                response_box.markdown(
+                    "<div style='background:#FFF1F2;border:2px solid #FECDD3;border-radius:10px;"
+                    "padding:16px;font-size:.95rem;color:#991B1B'>"
+                    "🛡️ <b>Response recalled by TrustLayer</b> — accuracy issues detected.<br><br>"
+                    "<em>\"I'm sorry, I'm not able to provide specific details on that right now. "
+                    "Please consult your process engineer or safety officer who can provide verified, "
+                    "specifications and guidance for your operations.\"</em></div>",
+                    unsafe_allow_html=True,
+                )
+            elif history_action == "FLAG":
+                response_box.empty()
+                response_box.markdown(
+                    f"<div style='background:#FFFBEB;border:2px solid #FCD34D;border-radius:10px;"
+                    f"padding:16px;font-size:.95rem;color:#92400E'>"
+                    f"⚠️ <b>Under review</b> — TrustLayer flagged potential accuracy issues.<br><br>"
+                    f"<div style='color:#1E293B;margin-top:8px'>{llm_response}</div>"
+                    f"<br><em style='font-size:.85rem'>A quality engineer is reviewing this response.</em></div>",
+                    unsafe_allow_html=True,
+                )
 
             st.session_state.history.append({
                 "time":       datetime.now().strftime("%H:%M:%S"),
@@ -853,11 +875,8 @@ with tab_detect:
                 })
 
         except Exception as e:
-            progress_placeholder.empty()
             st.error(f"❌ Analysis failed: {e}")
             st.stop()
-
-        progress_placeholder.empty()
 
     # ── Cross-validation panel ────────────────────────────────────────────────
     cv_result: Optional[CrossValidationResult] = st.session_state.get("last_cv_result")
