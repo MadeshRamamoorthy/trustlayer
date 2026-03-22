@@ -235,6 +235,83 @@ INDUSTRIES: dict[str, dict] = {
         ),
     },
 
+    "Manufacturing": {
+        "icon": "🏭",
+        "risk_factor": 1.3,
+        "description": "Production processes, quality control, safety compliance, supply chain",
+        "system_prompt": (
+            "You are a manufacturing operations assistant for an industrial facility. "
+            "Answer questions about production processes, quality standards (ISO 9001, Six Sigma), "
+            "equipment maintenance, safety protocols (OSHA), and supply chain management accurately. "
+            "Always recommend consulting certified engineers or safety officers for critical decisions."
+        ),
+        "risk_tags": [
+            "wrong_tolerance", "fabricated_specification", "incorrect_safety_protocol",
+            "fake_certification", "wrong_maintenance_interval", "fabricated_yield_rate",
+            "incorrect_material_property", "wrong_pressure_rating", "fake_compliance_standard",
+        ],
+        "scenarios": [
+            {
+                "label": "✅ What is Six Sigma and how does DMAIC work? (High Confidence)",
+                "query": (
+                    "Can you explain what Six Sigma is and how the DMAIC methodology works "
+                    "in a manufacturing environment? What are the key phases?"
+                ),
+            },
+            {
+                "label": "✅ General preventive maintenance best practices (High Confidence)",
+                "query": (
+                    "What are the general best practices for implementing a preventive maintenance "
+                    "program in a manufacturing plant? What should a maintenance schedule cover?"
+                ),
+            },
+            {
+                "label": "✅ What is ISO 9001 certification? (High Confidence)",
+                "query": (
+                    "Can you explain what ISO 9001 certification means for a manufacturing facility? "
+                    "What are the key principles and requirements?"
+                ),
+            },
+            {
+                "label": "⚠️ CNC Machine Tolerance & Feed Rate Specs (Hallucination Risk)",
+                "query": (
+                    "What are the exact tolerance specifications for our CNC milling machines "
+                    "on aluminum 6061-T6 parts? What feed rates and spindle speeds should we use?"
+                ),
+            },
+            {
+                "label": "⚠️ OSHA Chemical Storage Requirements (Hallucination Risk)",
+                "query": (
+                    "What are the specific OSHA requirements for storing flammable chemicals "
+                    "in our facility? Cite the exact regulatory codes and maximum storage quantities."
+                ),
+            },
+            {
+                "label": "⚠️ Pressure Vessel Inspection Intervals (Hallucination Risk)",
+                "query": (
+                    "What is the required inspection interval for our ASME-rated pressure vessels? "
+                    "What are the exact pressure ratings and when is the next hydrostatic test due?"
+                ),
+            },
+        ],
+        "grounding_context": (
+            "FACILITY OPERATIONS DATA (verified):\n"
+            "- CNC mill tolerance: ±0.005 inches standard, ±0.001 for precision jobs\n"
+            "- Aluminum 6061-T6 recommended feed rate: 800-1200 SFM depending on tool diameter\n"
+            "- Spindle speed for Al 6061-T6 (0.5\" endmill): 7,600-9,200 RPM\n"
+            "- Preventive maintenance cycle: CNC machines every 500 operating hours\n"
+            "- OSHA flammable storage: 29 CFR 1910.106 — max 60 gallons in safety cabinets\n"
+            "- OSHA machine guarding: 29 CFR 1910.212 — all rotating parts must be guarded\n"
+            "- ASME pressure vessels: inspection per NBIC (NB-23), typically annual internal\n"
+            "- Current OEE (Overall Equipment Effectiveness): 78.5%\n"
+            "- Defect rate: 2.3 per 1000 units (target: <1.5 per 1000 for Six Sigma)\n"
+            "- ISO 9001:2015 certified — last audit passed 2025-11-15\n"
+            "- Shift schedule: 3 shifts, 8 hours each, 24/7 operation\n"
+            "- Material traceability: all raw materials require mill certs per AS9100D\n"
+            "- NOTE: All safety-critical decisions must be verified by a certified safety engineer"
+        ),
+    },
+
     "General": {
         "icon": "🤖",
         "risk_factor": 1.0,

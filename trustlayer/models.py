@@ -26,14 +26,14 @@ class TechniqueScores(BaseModel):
 
     def weighted_confidence(self) -> float:
         weights = {
-            "semantic_entropy":    0.10,
-            "self_consistency":    0.12,
-            "source_verification": 0.18,
-            "enterprise_grounding":0.25,
-            "claim_classification":0.10,
+            "semantic_entropy":    0.08,
+            "self_consistency":    0.10,
+            "source_verification": 0.12,
+            "enterprise_grounding":0.28,
+            "claim_classification":0.08,
             "pattern_recognition": 0.08,
             "temporal_consistency":0.10,
-            "numerical_validation":0.07,
+            "numerical_validation":0.16,
         }
         total = sum(
             getattr(self, k) * w for k, w in weights.items()

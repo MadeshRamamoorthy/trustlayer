@@ -1,7 +1,7 @@
 """
 TrustLayer AI — Real Application
 Enterprise AI Reliability Platform powered by Anthropic Claude
-Canada Hackathon 2026
+Manufacturing AI Safety
 """
 
 from __future__ import annotations
@@ -260,7 +260,7 @@ if not st.session_state.authenticated:
         st.markdown("<div class='login-title'>TrustLayer AI</div>", unsafe_allow_html=True)
         st.markdown(
             "<div class='login-sub'>Enterprise AI Reliability Platform<br>"
-            "Canada Hackathon 2026</div>",
+            "Manufacturing AI Safety</div>",
             unsafe_allow_html=True,
         )
 
@@ -396,7 +396,7 @@ def generate_pdf(result, cv_result=None) -> bytes:
     pdf.cell(0, 10, "TrustLayer AI - Analysis Report", ln=True)
     pdf.set_font("Helvetica", "", 9)
     pdf.set_xy(15, 19)
-    pdf.cell(0, 6, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  |  Canada Hackathon 2026", ln=True)
+    pdf.cell(0, 6, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  |  Manufacturing AI Safety", ln=True)
     pdf.set_text_color(30, 41, 59)
     pdf.ln(6)
 
@@ -582,7 +582,7 @@ with st.sidebar:
             st.caption("Enter your OpenAI key above to enable cross-validation.")
 
     st.divider()
-    st.caption("**Canada Hackathon 2026**")
+    st.caption("**Manufacturing AI Safety**")
     st.caption("Detect · Prevent · Govern")
 
 
@@ -595,7 +595,7 @@ st.markdown(
   {DYNAMIC_LOGO_SVG}
   <div>
     <div style="color:#fff;font-size:1.5rem;font-weight:800;line-height:1.2">TrustLayer AI</div>
-    <div style="color:#94A3B8;font-size:.92rem">Real-time hallucination detection · Claude + GPT-4o · Canada Hackathon 2026</div>
+    <div style="color:#94A3B8;font-size:.92rem">Real-time hallucination detection · Claude + GPT-4o · Manufacturing AI Safety</div>
     <div style="color:#64748B;font-size:.78rem;margin-top:3px">Signed in as <strong style="color:#7DD3FC">{st.session_state.user_name}</strong></div>
   </div>
 </div>""",
@@ -611,7 +611,7 @@ tab_detect, tab_history, tab_batch, tab_enterprise, tab_review, tab_howto = st.t
     "🔍  Live Detection",
     "📊  Session History",
     "🚀  Batch Test",
-    "🏦  Enterprise Flow",
+    "🏭  Enterprise Flow",
     "👥  Review Queue",
     "📖  How It Works",
 ])
@@ -807,8 +807,8 @@ with tab_detect:
             # BLOCK: the human reviewer must still see the item.
             SAFE_FALLBACK = (
                 "I'm sorry, I'm not able to provide specific details on that right now. "
-                "Please speak with one of our advisors who can give you accurate, "
-                "personalised guidance based on your situation."
+                "Please consult your process engineer or safety officer who can provide verified, "
+                "specifications and guidance for your operations."
             )
             raw_claude_action = result.action  # Claude's own verdict before consensus
             escalated_to_block = (raw_claude_action == "FLAG" and history_action == "BLOCK")
@@ -1353,7 +1353,7 @@ with tab_batch:
 # TAB 4: ENTERPRISE FLOW SIMULATION
 # ─────────────────────────────────────────────────────────────────────────────
 with tab_enterprise:
-    st.markdown("#### 🏦 Enterprise Banking App — Interactive Pipeline")
+    st.markdown("#### 🏭 Enterprise Manufacturing App — Interactive Pipeline")
     st.markdown(
         "Click any stage in the pipeline to explore that persona's role, inputs, and outputs. "
         "Run a query in **Live Detection** first to see the full flow come alive."
@@ -1392,7 +1392,7 @@ with tab_enterprise:
     gpt4o_active  = bool(cv_result_ent and cv_result_ent.openai_result)
 
     if action_ent == "PASS":
-        outcome_lbl, outcome_sub, outcome_col = "✅ Customer", "Receives response", "#27AE60"
+        outcome_lbl, outcome_sub, outcome_col = "✅ Operator", "Receives response", "#27AE60"
     elif action_ent == "FLAG":
         outcome_lbl, outcome_sub, outcome_col = "⚠️ Review Queue", "Human reviewer", "#F39C12"
     elif action_ent == "BLOCK":
@@ -1403,9 +1403,9 @@ with tab_enterprise:
     flow_html = (
         "<div style='display:flex;align-items:center;gap:2px;overflow-x:auto;"
         "padding:20px 12px;background:#F8FAFC;border-radius:14px;margin:12px 0'>"
-        + _flow_node("👤 Customer",    "Submits query",           active=True,              color="#0066FF", selected=(sel=="customer"))
+        + _flow_node("👷 Operator",    "Submits query",           active=True,              color="#0066FF", selected=(sel=="customer"))
         + _arrow("query")
-        + _flow_node("🏦 Banking App", "Enterprise chatbot",      active=bool(result_ent),  color="#0066FF", selected=(sel=="bankapp"))
+        + _flow_node("🏭 MES System",  "Manufacturing platform",  active=bool(result_ent),  color="#0066FF", selected=(sel=="bankapp"))
         + _arrow("sends to")
         + _flow_node("🤖 Claude LLM",  "Generates response",      active=bool(result_ent),  color="#7B2D8B", selected=(sel=="claude"))
         + _arrow("analyze")
@@ -1422,11 +1422,11 @@ with tab_enterprise:
     st.markdown("<div style='font-size:.85rem;color:#64748B;margin-bottom:6px'>👇 Click a stage to explore:</div>", unsafe_allow_html=True)
     pb1, pb2, pb3, pb4, pb5, pb6 = st.columns(6)
     with pb1:
-        if st.button("👤 Customer", use_container_width=True, key="btn_ent_customer"):
+        if st.button("👷 Operator", use_container_width=True, key="btn_ent_customer"):
             st.session_state._selected_flow_node = "customer"
             st.rerun()
     with pb2:
-        if st.button("🏦 Banking App", use_container_width=True, key="btn_ent_bankapp"):
+        if st.button("🏭 MES System", use_container_width=True, key="btn_ent_bankapp"):
             st.session_state._selected_flow_node = "bankapp"
             st.rerun()
     with pb3:
@@ -1457,21 +1457,21 @@ with tab_enterprise:
                 st.markdown(
                     "<div style='background:#EFF6FF;border:2px solid #BFDBFE;border-radius:16px;"
                     "padding:24px 16px;text-align:center;height:100%'>"
-                    "<div style='font-size:3rem'>👤</div>"
-                    "<div style='font-weight:700;color:#1D4ED8;margin-top:8px;font-size:1.1rem'>Customer</div>"
-                    "<div style='font-size:.78rem;color:#3B82F6;margin-top:4px'>Banking App User</div>"
+                    "<div style='font-size:3rem'>👷</div>"
+                    "<div style='font-weight:700;color:#1D4ED8;margin-top:8px;font-size:1.1rem'>Operator</div>"
+                    "<div style='font-size:.78rem;color:#3B82F6;margin-top:4px'>Manufacturing Floor User</div>"
                     "<hr style='border-color:#BFDBFE;margin:14px 0'>"
                     "<div style='font-size:.78rem;color:#475569;text-align:left;line-height:1.8'>"
-                    "<b>Role:</b> End user of the banking chatbot<br>"
-                    "<b>Sees:</b> A clean chat interface<br>"
+                    "<b>Role:</b> Plant operator or process engineer<br>"
+                    "<b>Sees:</b> A clean operations assistant interface<br>"
                     "<b>Unaware of:</b> TrustLayer running silently<br>"
-                    "<b>Protected from:</b> Hallucinated financial advice"
+                    "<b>Protected from:</b> Hallucinated specs, tolerances &amp; safety data"
                     "</div></div>",
                     unsafe_allow_html=True,
                 )
             with d_col:
                 if result_ent:
-                    st.markdown("##### 💬 What the customer asked:")
+                    st.markdown("##### 💬 What the operator asked:")
                     st.markdown(
                         f"<div style='background:#fff;border:2px solid #BFDBFE;border-radius:10px;"
                         f"padding:16px;font-size:1rem;line-height:1.6;margin-bottom:16px'>"
@@ -1479,7 +1479,7 @@ with tab_enterprise:
                         f"</div>",
                         unsafe_allow_html=True,
                     )
-                    st.markdown("##### 📨 What the customer received:")
+                    st.markdown("##### 📨 What the operator received:")
                     if action_ent == "PASS":
                         st.markdown(
                             f"<div style='background:#F0FDF4;border:2px solid #86EFAC;border-radius:10px;"
@@ -1488,46 +1488,46 @@ with tab_enterprise:
                             f"</div>",
                             unsafe_allow_html=True,
                         )
-                        st.caption("No intervention — TrustLayer cleared the response.")
+                        st.caption("No intervention — TrustLayer cleared the response for the operator.")
                     elif action_ent == "FLAG":
                         st.markdown(
                             "<div style='background:#FFFBEB;border:2px solid #FCD34D;border-radius:10px;"
                             "padding:16px;font-size:.95rem;font-style:italic;color:#92400E'>"
-                            "⏳ \"Thank you for your question. One of our specialists is reviewing "
-                            "this for you and will respond shortly with accurate information.\""
+                            "⏳ \"Thank you for your question. A quality engineer is reviewing "
+                            "this response and will provide verified specifications shortly.\""
                             "</div>",
                             unsafe_allow_html=True,
                         )
-                        st.caption("Customer is waiting. The flagged response is in the 👥 Review Queue tab.")
+                        st.caption("Operator is waiting. The flagged response is in the 👥 Review Queue tab.")
                     elif action_ent == "BLOCK":
                         st.markdown(
                             "<div style='background:#FFF1F2;border:2px solid #FECDD3;border-radius:10px;"
                             "padding:16px;font-size:.95rem;font-style:italic;color:#991B1B'>"
                             "🛡️ \"I'm sorry, I'm not able to provide specific details on that right now. "
-                            "Please speak with one of our advisors who can give you accurate, "
-                            "personalised guidance based on your situation.\""
+                            "Please consult your process engineer or safety officer who can provide verified, "
+                            "specifications and guidance for your operations.\""
                             "</div>",
                             unsafe_allow_html=True,
                         )
                         st.caption("Safe fallback delivered. The harmful AI response was never shown.")
                 else:
-                    st.info("Run a query in **Live Detection** to see the customer's journey here.")
+                    st.info("Run a query in **Live Detection** to see the operator's journey here.")
 
         # ── BANKING APP ───────────────────────────────────────────────────
         elif sel == "bankapp":
             p_col, d_col = st.columns([1, 3])
             with p_col:
-                industry_label = result_ent.industry if result_ent else "BFSI Banking"
+                industry_label = result_ent.industry if result_ent else "Manufacturing"
                 rf_label       = str(get_industry(result_ent.industry)["risk_factor"]) + "×" if result_ent else "1.3×"
                 st.markdown(
                     f"<div style='background:#EFF6FF;border:2px solid #BFDBFE;border-radius:16px;"
                     f"padding:24px 16px;text-align:center;height:100%'>"
-                    f"<div style='font-size:3rem'>🏦</div>"
-                    f"<div style='font-weight:700;color:#1D4ED8;margin-top:8px;font-size:1.1rem'>Banking App</div>"
-                    f"<div style='font-size:.78rem;color:#3B82F6;margin-top:4px'>Enterprise Chatbot Layer</div>"
+                    f"<div style='font-size:3rem'>🏭</div>"
+                    f"<div style='font-weight:700;color:#1D4ED8;margin-top:8px;font-size:1.1rem'>MES System</div>"
+                    f"<div style='font-size:.78rem;color:#3B82F6;margin-top:4px'>Manufacturing Execution Platform</div>"
                     f"<hr style='border-color:#BFDBFE;margin:14px 0'>"
                     f"<div style='font-size:.78rem;color:#475569;text-align:left;line-height:1.8'>"
-                    f"<b>Role:</b> Enterprise application layer<br>"
+                    f"<b>Role:</b> Manufacturing operations platform<br>"
                     f"<b>Routes queries to:</b> Claude LLM<br>"
                     f"<b>Integrated with:</b> TrustLayer middleware<br>"
                     f"<b>Industry:</b> {industry_label}<br>"
@@ -1561,7 +1561,7 @@ with tab_enterprise:
                         f"TrustLayer processes EVERY response before delivery"
                     )
                 else:
-                    st.info("Run a query in **Live Detection** to see the Banking App's role.")
+                    st.info("Run a query in **Live Detection** to see the MES System's role.")
 
         # ── CLAUDE LLM ────────────────────────────────────────────────────
         elif sel == "claude":
@@ -1600,11 +1600,11 @@ with tab_enterprise:
                     m2.metric("Words", len(result_ent.llm_response.split()))
                     m3.metric("TrustLayer verdict", result_ent.action)
                     if action_ent == "PASS":
-                        st.success("✅ This response passed all TrustLayer checks and was delivered to the customer.")
+                        st.success("✅ This response passed all TrustLayer checks and was delivered to the operator.")
                     elif action_ent == "FLAG":
-                        st.warning("⚠️ This response was flagged — sent for human review. Customer sees a holding message.")
+                        st.warning("⚠️ This response was flagged — sent for human review. Operator sees a holding message.")
                     elif action_ent == "BLOCK":
-                        st.error("🚫 This response was BLOCKED — it was never delivered. Customer received a safe fallback.")
+                        st.error("🚫 This response was BLOCKED — it was never delivered. Operator received a safe fallback.")
                 else:
                     st.info("Run a query in **Live Detection** to see Claude's raw output here.")
 
@@ -1805,7 +1805,7 @@ with tab_enterprise:
                 )
             with d_col:
                 if action_ent == "PASS":
-                    st.success("Response cleared all 8 detection checks. Delivered to the customer without modification.")
+                    st.success("Response cleared all 8 detection checks. Delivered to the operator without modification.")
                     st.markdown(
                         f"<div style='background:#fff;border:2px solid #86EFAC;border-radius:10px;"
                         f"padding:16px;font-size:.9rem;line-height:1.7;max-height:260px;overflow-y:auto'>"
@@ -1813,19 +1813,19 @@ with tab_enterprise:
                         unsafe_allow_html=True,
                     )
                 elif action_ent == "FLAG":
-                    st.warning("Response scored borderline — routed to human review. Customer sees a holding message.")
+                    st.warning("Response scored borderline — routed to human review. Operator sees a holding message.")
                     st.markdown(
                         "<div style='background:#FFFBEB;border:2px solid #FCD34D;border-radius:10px;padding:16px'>"
                         "<b>📋 Review Queue entry created. A compliance reviewer will:</b><br><br>"
                         "&nbsp;&nbsp;• <b>Approve</b> → deliver the original AI response<br>"
                         "&nbsp;&nbsp;• <b>Reject</b> → send safe fallback instead<br>"
-                        "&nbsp;&nbsp;• <b>Escalate</b> → raise to senior compliance officer<br><br>"
+                        "&nbsp;&nbsp;• <b>Escalate</b> → raise to senior quality/safety engineer<br><br>"
                         "See the <b>👥 Review Queue</b> tab for the queued item."
                         "</div>",
                         unsafe_allow_html=True,
                     )
                 elif action_ent == "BLOCK":
-                    st.error("Response scored below threshold — blocked. Customer received a safe fallback.")
+                    st.error("Response scored below threshold — blocked. Operator received a safe fallback.")
                     if st.session_state.blocked_responses:
                         latest = st.session_state.blocked_responses[-1]
                         b_left, b_right = st.columns(2)
@@ -1849,7 +1849,7 @@ with tab_enterprise:
                             st.markdown(
                                 "<div style='background:#DCFCE7;border-left:4px solid #22C55E;"
                                 "padding:10px;border-radius:8px;margin-bottom:8px'>"
-                                "<b style='color:#166534'>✅ Safe Fallback (what customer received)</b></div>",
+                                "<b style='color:#166534'>✅ Safe Fallback (what operator received)</b></div>",
                                 unsafe_allow_html=True,
                             )
                             st.markdown(
@@ -1860,7 +1860,7 @@ with tab_enterprise:
                             st.markdown(
                                 "<div style='background:#F0FDF4;border:1px solid #86EFAC;"
                                 "border-radius:8px;padding:10px;margin-top:8px;font-size:.85rem;color:#166534'>"
-                                "✔ Customer protected<br>✔ Harmful content never delivered<br>"
+                                "✔ Operator protected<br>✔ Harmful content never delivered<br>"
                                 "✔ Interaction logged for compliance audit</div>",
                                 unsafe_allow_html=True,
                             )
@@ -1960,7 +1960,7 @@ with tab_review:
                     qi_col, ai_col, tl_col = st.columns([1.2, 1.8, 1])
 
                     with qi_col:
-                        st.markdown("**Customer Query**")
+                        st.markdown("**Operator Query**")
                         st.markdown(
                             f"<div style='background:#fff;border:1px solid #FEF3C7;"
                             f"border-radius:8px;padding:10px;font-size:.9rem;"
@@ -2074,8 +2074,8 @@ with tab_review:
                                 "ai_response": item["ai_response"],
                                 "user_saw":    (
                                     "I'm sorry, I'm not able to provide specific details on that right now. "
-                                    "Please speak with one of our advisors who can give you accurate, "
-                                    "personalised guidance based on your situation."
+                                    "Please consult your process engineer or safety officer who can provide verified, "
+                                    "specifications and guidance for your operations."
                                 ),
                                 "confidence":  item["confidence"],
                                 "risk":        item["risk"],
