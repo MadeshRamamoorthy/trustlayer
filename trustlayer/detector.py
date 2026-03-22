@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
 import anthropic
@@ -102,7 +103,7 @@ class TrustLayerDetector:
 
         msg = self.client.messages.create(
             model=MODEL,
-            max_tokens=600,
+            max_tokens=200,
             system=industry_cfg["system_prompt"],
             messages=[{"role": "user", "content": request.query}],
         )
@@ -146,7 +147,7 @@ class TrustLayerDetector:
 
         raw = self.client.messages.create(
             model=MODEL,
-            max_tokens=1500,
+            max_tokens=500,
             messages=[{"role": "user", "content": detection_prompt}],
         )
         raw_text = raw.content[0].text
@@ -163,7 +164,7 @@ class TrustLayerDetector:
             # Silent retry: ask Claude to return clean JSON only
             retry = self.client.messages.create(
                 model=MODEL,
-                max_tokens=1500,
+                max_tokens=500,
                 messages=[
                     {"role": "user",      "content": detection_prompt},
                     {"role": "assistant", "content": raw_text},
@@ -246,21 +247,28 @@ class TrustLayerDetector:
         """
         Ask the same question twice more and measure semantic agreement with
         the original response. Returns a 0–1 score.
+        Both calls run in parallel to cut latency in half.
         """
         industry_cfg = get_industry(request.industry)
+
+        def _generate_variant():
+            msg = self.client.messages.create(
+                model=MODEL,
+                max_tokens=400,
+                system=industry_cfg["system_prompt"],
+                messages=[{"role": "user", "content": request.query}],
+                temperature=0.7,
+            )
+            return msg.content[0].text
+
         responses = []
-        for _ in range(2):
-            try:
-                msg = self.client.messages.create(
-                    model=MODEL,
-                    max_tokens=400,
-                    system=industry_cfg["system_prompt"],
-                    messages=[{"role": "user", "content": request.query}],
-                    temperature=0.7,   # slight variation to test consistency
-                )
-                responses.append(msg.content[0].text)
-            except Exception:
-                pass
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [executor.submit(_generate_variant) for _ in range(2)]
+            for f in futures:
+                try:
+                    responses.append(f.result())
+                except Exception:
+                    pass
 
         if not responses:
             return 0.8  # default if check fails

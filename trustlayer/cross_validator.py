@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -295,20 +296,25 @@ class CrossValidator:
 
     def run(self, request: AnalysisRequest) -> CrossValidationResult:
         """
-        Full pipeline:
-          1. Claude generates AND analyzes
-          2. GPT-4o uses Claude's response (same input) and analyzes independently
+        Full pipeline (parallelized):
+          1. Claude generates the response
+          2. Claude + GPT-4o analyze the SAME response IN PARALLEL
           3. Compute agreement + consensus
+
+        Parallelizing step 2 cuts ~3-4s off total latency.
         """
         t0 = time.time()
 
-        # Step 1: Claude pipeline (generate + analyze)
-        llm_response, claude_result = self.claude.run(request)
+        # Step 1: Claude generates the response (must complete first)
+        llm_response = self.claude.generate_response(request)
 
-        # Step 2: GPT-4o analyzes the SAME llm_response
-        # (We analyze the response Claude already generated so both judges
-        #  assess identical content — isolates the detection difference.)
-        openai_result = self.gpt.analyze(request, llm_response)
+        # Step 2: Both judges analyze the SAME response IN PARALLEL
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            claude_future = executor.submit(self.claude.analyze, request, llm_response)
+            gpt_future    = executor.submit(self.gpt.analyze, request, llm_response)
+
+            claude_result = claude_future.result()
+            openai_result = gpt_future.result()
 
         # Step 3: Agreement scoring
         agreement, signals = self._score_agreement(claude_result, openai_result)
