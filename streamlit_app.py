@@ -719,6 +719,20 @@ with tab_detect:
             # ── Phase 1: Stream response to user instantly (~2-3s) ─────
             detector = get_detector(api_key)
             st.markdown("##### 💬 AI Response")
+
+            # Validation disclaimer — shown while judges are running
+            validation_banner = st.empty()
+            validation_banner.markdown(
+                "<div style='background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;"
+                "padding:10px 14px;font-size:.85rem;color:#1D4ED8;margin-bottom:10px;"
+                "display:flex;align-items:center;gap:8px'>"
+                "<span style='font-size:1.1rem'>&#9432;</span>"
+                "<span>This response is being validated by TrustLayer in real-time. "
+                "Content may be revised or replaced if accuracy issues are detected.</span>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+
             response_box = st.empty()
             streamed_chunks = []
 
@@ -790,6 +804,20 @@ with tab_detect:
             analysis_status.empty()
 
             # ── Phase 3: Show verdict overlay on the streamed response ──
+            # Remove the "being validated" disclaimer — verdict is in
+            if history_action == "PASS":
+                validation_banner.markdown(
+                    "<div style='background:#DCFCE7;border:1px solid #86EFAC;border-radius:8px;"
+                    "padding:10px 14px;font-size:.85rem;color:#166534;margin-bottom:10px;"
+                    "display:flex;align-items:center;gap:8px'>"
+                    "<span style='font-size:1.1rem'>&#10003;</span>"
+                    "<span>Verified by TrustLayer — response passed all 8 detection checks.</span>"
+                    "</div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                validation_banner.empty()
+
             if history_action == "BLOCK":
                 response_box.empty()
                 response_box.markdown(
