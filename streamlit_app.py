@@ -313,13 +313,14 @@ if not st.session_state.authenticated:
 
 
 # ── Helper: get detector (cached per API key) ─────────────────────────────────
+# _v2: cache version bump — forces re-creation after code changes
 @st.cache_resource
-def get_detector(api_key: str) -> TrustLayerDetector:
+def get_detector(api_key: str, _version: str = "v2") -> TrustLayerDetector:
     return TrustLayerDetector(api_key=api_key)
 
 
 @st.cache_resource
-def get_cross_validator(anthropic_key: str, openai_key: str) -> CrossValidator:
+def get_cross_validator(anthropic_key: str, openai_key: str, _version: str = "v2") -> CrossValidator:
     return CrossValidator(anthropic_key=anthropic_key, openai_key=openai_key)
 
 
